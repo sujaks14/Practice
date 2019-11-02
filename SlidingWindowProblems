@@ -1,0 +1,1024 @@
+package QuickReference;
+
+
+import java.util.*;
+
+/**
+ * ref: https://medium.com/leetcode-patterns/leetcode-pattern-2-sliding-windows-for-strings-e19af105316b
+ * ref: https://leetcode.com/problems/find-all-anagrams-in-a-string/discuss/92007/Sliding-Window-algorithm-template-to-solve-all-the-Leetcode-substring-search-problem.
+ */
+public class SlidingWindow {
+
+    /**
+     Sliding Window Maximum (Maximum of all subarrays of size k)
+     Given an array and an integer K, find the maximum for each and every contiguous subarray of size k.
+     Examples :
+     Input: arr[] = {1, 2, 3, 1, 4, 5, 2, 3, 6}, K = 3
+     Output: 3 3 4 5 5 5 6
+
+     Input: arr[] = {8, 5, 10, 7, 9, 4, 15, 12, 90, 13}, K = 4
+     Output: 10 10 10 15 15 90 90
+     */
+
+    static void slidingWindowMax() {
+        int[] nums = new int[] {1, 2, 3, 1, 4, 5, 2, 3, 6};
+        int k = 3;
+
+        ArrayDeque<Integer> q = new ArrayDeque<>();
+        int[] result = new int[nums.length - k +1]; //8-3+1->6
+
+        for(int i=0; i < nums.length ; i++) {
+
+            //once in k interval -> n/k times
+            if(!q.isEmpty() && q.peekFirst() <= i - k) { // 0 1 2 3 4 ->
+                q.pollFirst();
+            }
+
+            // at the max k elements -> k times
+            while(!q.isEmpty() && nums[q.peekLast()] < nums[i]) {
+                q.pollLast();
+            }
+
+
+            q.addLast(i);
+
+            if(i-k+1 >= 0)
+               result[i-k+1] = nums[q.peekFirst()];
+
+        }
+
+        Arrays.stream(result).forEach(e-> System.out.println(e));
+    }
+
+    /**Max of consecutive elements in an array
+    Given an array of integers of size ‘n’.
+    Our aim is to calculate the maximum sum possible for ‘k’ consecutive elements in the array.
+
+            Input  : arr[] = {100, 200, 300, 400}
+    k = 2
+    Output : 700
+     */
+
+    public static void maxArray() {
+        int[] nums = new int[] {1,2,3,4,5,6,7};
+        int k =3;
+        int[] result = new int[nums.length-k+1];
+        int max = 0;
+        int i = 0;
+        for( ; i<k;i++) {
+            max +=nums[i];
+        }
+        result[i-k] = max;
+
+      for(;i < nums.length; i++ ) {
+          result[i-k+1] = nums[i] + result[i-k] - nums[i-k];
+          max = Math.max(max, result[i-k+1]);
+      }
+
+        System.out.println("max: " + max);
+
+        /**
+//         int max_sum = 0, window_sum = 0;
+//         /* calculate sum of 1st window */
+//        for (int i = 0; i < k; i++)
+//        window_sum += arr[i];
+//        /* slide window from start to end in array. */
+//
+//        for (int i = k; i < n; i++){
+//            window_sum += arr[i] - arr[i-k];    // saving re-computation
+//            max_sum = max(max_sum, window_sum);
+//        }
+//         */
+
+    }
+
+    public static void main(String[] args) {
+//        slidingWindowMax();
+//        maxArray();
+//        minWindow("ABDEACBEECDDFGABBCE", "ABC");
+//        FindAllAnagramsSlidingWindow();
+//        lengthOfLongestSubstring("abcdeadk");
+//        lengthOfLongestSubstringTwoDistinct("aaaabbbbbcde");
+        String s = "barfoothefoobarman";
+        String[] arr = new String[]{"foo","bar" };
+//        findSubstring(s, arr);
+        characterReplacement("AAAABBC", 1);
+    }
+
+    // Ref:- https://medium.com/leetcode-patterns/leetcode-pattern-2-sliding-windows-for-strings-e19af105316b
+
+    public static String minWindow(String s, String t) {
+
+        if (s.length() == 0 || t.length() == 0) {
+            return "";
+        }
+
+        // Dictionary which keeps a count of all the unique characters in t.
+        Map<Character, Integer> dictT = new HashMap<Character, Integer>();
+
+        for (int i = 0; i < t.length(); i++) {
+            int count = dictT.getOrDefault(t.charAt(i), 0);
+            dictT.put(t.charAt(i), count + 1);
+        }
+
+        // Number of unique characters in t, which need to be present in the desired window.
+        int required = dictT.size();
+
+        // Left and Right pointer
+        int l = 0, r = 0;
+
+        // formed is used to keep track of how many unique characters in t
+        // are present in the current window in its desired frequency.
+        // e.g. if t is "AABC" then the window must have two A's, one B and one C.
+        // Thus formed would be = 3 when all these conditions are met.
+        int formed = 0;
+
+        // Dictionary which keeps a count of all the unique characters in the current window.
+        Map<Character, Integer> windowCounts = new HashMap<Character, Integer>();
+
+        // ans list of the form (window length, left, right)
+        int[] ans = {-1, 0, 0};
+
+        while (r < s.length()) {
+            // Add one character from the right to the window
+            char c = s.charAt(r);
+
+            if(dictT.containsKey(c)) {
+                int count = windowCounts.getOrDefault(c, 0);
+                windowCounts.put(c, count + 1);
+
+                // If the frequency of the current character added equals to the
+                // desired count in t then increment the formed count by 1.
+                if (windowCounts.get(c).intValue() == dictT.get(c).intValue()) {
+                    formed++;
+                }
+            }
+
+            // Try and contract the window till the point where it ceases to be 'desirable'.
+            while (l <= r && formed == required) {
+                c = s.charAt(l);
+                // Save the smallest window until now.
+                if (ans[0] == -1 || r - l + 1 < ans[0]) {
+                    ans[0] = r - l + 1;
+                    ans[1] = l;
+                    ans[2] = r;
+                }
+
+                if(windowCounts.containsKey(c)) {
+                    // The character at the position pointed by the
+                    // `Left` pointer is no longer a part of the window.
+                    windowCounts.put(c, windowCounts.get(c) - 1);
+                    if (dictT.containsKey(c) && windowCounts.get(c).intValue() < dictT.get(c).intValue()) {
+                        formed--;
+                    }
+
+                }
+                // Move the left pointer ahead, this would help to look for a new window.
+                l++;
+            }
+
+            // Keep expanding the window once we are done contracting.
+            r++;
+        }
+
+         System.out.println("exits");
+         Arrays.stream(ans).forEach(e-> System.out.println(e));
+        return ans[0] == -1 ? "" : s.substring(ans[1], ans[2] + 1);
+    }
+
+    /** Find All Anagrams in a String
+    https://leetcode.com/problems/find-all-anagrams-in-a-string/description/
+
+     Given a string s and a non-empty string p, find all the start indices of p's anagrams in s.
+
+     Strings consists of lowercase English letters only and the length of both strings s and p will not be larger than 20,100.
+
+     The order of output does not matter.
+
+     Example 1:
+
+     Input:
+     s: "cbaebabacd" p: "abc"
+
+     Output:
+     [0, 6]
+
+     Explanation:
+     The substring with start index = 0 is "cba", which is an anagram of "abc".
+     The substring with start index = 6 is "bac", which is an anagram of "abc".
+
+
+     */
+
+    public static  void FindAllAnagramsSlidingWindow() {
+        String s = "cbaebababacd";
+        String t = "abc";
+
+
+        int left = 0;
+        int right = 0;
+        Map<Character, Integer> tMap = new HashMap<>();
+
+        for(char c:t.toCharArray()) {
+            tMap.put(c, tMap.getOrDefault(c,0)+1);
+        }
+
+        Map<Character, Integer> windowMap = new HashMap<>();
+        int anagramCharCount = 0;
+        int angramStartIndex = 0;
+
+
+        while(right < s.length()) {
+
+            char c = s.charAt(right);
+            if(tMap.containsKey(c)) {
+                windowMap.put(c, windowMap.getOrDefault(c,0)+1);
+
+                if(tMap.get(c).intValue() == windowMap.get(c).intValue()) {
+                    anagramCharCount++;
+                }
+            }
+            while(anagramCharCount == tMap.size()) {
+                if(right-left+1 == t.length() ) {
+                    angramStartIndex = left;
+                    System.out.println("anaGramStartIndex: " + angramStartIndex);
+                }
+
+                char c2 = s.charAt(left);
+                if(tMap.containsKey(c2)) {
+                    windowMap.put(c2, windowMap.get(c2)-1);
+                    if(windowMap.get(c2) < tMap.get(c2))
+                         anagramCharCount--;
+                }
+                left++;
+            }
+            right++;
+        }
+    }
+
+    public static int lengthOfLongestSubstring(String s) {
+        Map<Character, Integer> map = new HashMap<>();
+        int begin = 0, end = 0, counter = 0, d = 0;
+
+        while (end < s.length()) {
+            // > 0 means repeating character
+            //if(map[s.charAt(end++)]-- > 0) counter++;
+            char c = s.charAt(end);
+            map.put(c, map.getOrDefault(c, 0) + 1);
+            if(map.get(c) > 1) counter++;
+            end++;
+
+            while (counter > 0) {
+                //if (map[s.charAt(begin++)]-- > 1) counter--;
+                char charTemp = s.charAt(begin);
+                if (map.get(charTemp) > 1) counter--;
+                map.put(charTemp, map.get(charTemp)-1);
+                begin++;
+            }
+            d = Math.max(d, end - begin);
+        }
+        return d;
+    }
+
+
+   static public int lengthOfLongestSubstringTwoDistinct(String s) {
+        Map<Character,Integer> map = new HashMap<>();
+        int start = 0, end = 0, counter = 0, len = 0;
+        while(end < s.length()){
+            char c = s.charAt(end);
+            map.put(c, map.getOrDefault(c, 0) + 1);
+            if(map.get(c) == 1)
+                counter++;//new char
+            end++;
+            while(counter > 2){
+                char cTemp = s.charAt(start);
+                map.put(cTemp, map.get(cTemp) - 1);
+                if(map.get(cTemp) == 0){
+                    counter--;
+                    System.out.println("start at: "+ start);
+                }
+                start++;
+
+            }
+            len = Math.max(len, end-start);
+            System.out.println("lenth:" + len +", start:" + start + ", end;" + end);
+        }
+
+        return len;
+    }
+
+    /**
+     Substring with Concatenation of All Words
+
+     Share
+     You are given a string, s, and a list of words, words, that are all of the same length. Find all starting indices of substring(s) in s that is a concatenation of each word in words exactly once and without any intervening characters.
+
+
+
+     Example 1:
+
+     Input:
+     s = "barfoothefoobarman",
+     words = ["foo","bar"]
+     Output: [0,9]
+     Explanation: Substrings starting at index 0 and 9 are "barfoo" and "foobar" respectively.
+     The output order does not matter, returning [9,0] is fine too.
+     Example 2:
+
+     Input:
+     s = "wordgoodgoodgoodbestword",
+     words = ["word","good","best","word"]
+     Output: []
+     */
+//    public List<Integer> findSubstring(String s, String[] words) {
+//        if (s == null || words == null || s.length() == 0 || words.length == 0) {
+//            return new ArrayList<>();
+//        }
+//        Map<String, Integer> counts = new HashMap<>();
+//        for (String word : words) {
+//            counts.put(word, counts.getOrDefault(word, 0) + 1);
+//        }
+//
+//        List<Integer> r = new ArrayList<>();
+//        int sLen = s.length();
+//        int num = words.length;
+//        int wordLen = words[0].length();
+//
+//        for (int i = 0; i < sLen - num * wordLen + 1; i++) {
+//            String sub = s.substring(i, i + num * wordLen);
+//            if (isConcat(sub, counts, wordLen)) {
+//                r.add(i);
+//            }
+//        }
+//        return r;
+//    }
+
+    /**
+     * */
+    static private boolean  isConcat(String sub, Map<String, Integer> counts, int wordLen) {
+        Map<String, Integer> seen = new HashMap<>();
+        for (int i = 0; i < sub.length(); i += wordLen) {
+            String sWord = sub.substring(i, i + wordLen);
+            seen.put(sWord, seen.getOrDefault(sWord, 0) + 1);
+        }
+        return seen.equals(counts);
+    }
+
+
+    public static List<Integer> findSubstring(String s, String[] words) {
+        if (s == null || words == null || s.length() == 0 || words.length == 0) {
+            return new ArrayList<>();
+        }
+        Map<String, Integer> counts = new HashMap<>();
+        for (String word : words) {
+            counts.put(word, counts.getOrDefault(word, 0) + 1);
+        }
+
+        List<Integer> r = new ArrayList<>();
+        int sLen = s.length();
+        int num = words.length;
+        int wordLen = words[0].length();
+
+        for (int i = 0; i < sLen - num * wordLen + 1; i++) {
+            String sub = s.substring(i, i + num * wordLen);
+            if (isConcat(sub, counts, wordLen)) {
+                r.add(i);
+            }
+        }
+        System.out.println("r: " + r);
+        return r;
+    }
+
+
+    public boolean checkInclusion(String s1, String s2) {
+        Map<Character,Integer> map = new HashMap<>();
+        for(Character ch : s1.toCharArray())
+            map.put(ch,map.getOrDefault(ch,0)+1);
+
+        int left = 0;
+        int count = 0;
+
+        for(int i=0;i<s2.length();i++){
+            char ch = s2.charAt(i);
+            map.put(ch, map.getOrDefault(ch,0)-1);
+            if(map.get(ch)>=0)
+                count++;
+
+            while(count==s1.length()&& left<=i){
+                if(i-left==s1.length()-1)
+                    return true;
+                char leftChar = s2.charAt(left);
+                map.put(leftChar, map.getOrDefault(leftChar,0)+1);
+                if(map.get(leftChar)>0) {
+                    count--;
+                }
+                left++;
+            }
+        }
+        return false;
+    }
+
+
+
+//    Longest Repeating Character Replacement
+//    https://leetcode.com/problems/longest-repeating-character-replacement
+   static public int characterReplacement(String s, int k)
+    {
+        int[] count = new int[26];
+        int maxCount=0;
+        int start=0;
+        int maxLen = 0;
+        for(int end=0; end<s.length(); end++)
+        {
+            count[s.charAt(end)-'A']++;
+
+            maxCount = Math.max(maxCount, count[s.charAt(end)-'A']);
+
+            if(end-start -maxCount +1 > k) {
+                start++;
+                count[s.charAt(start) - 'A']--;
+            }
+            maxLen = Math.max(maxLen, end-start+1);
+        }
+        System.out.println("result:" + (maxLen));
+        return maxLen;
+    }
+
+    public int characterReplacement1(String s, int k) {
+        if (s == null || s.isEmpty()) return 0;
+        int left = 0, right = 0, counter = 0, res = 0;
+        Map<Character, Integer> map = new HashMap<>();
+        while(right < s.length()) {
+            char ch = s.charAt(right++);
+            map.put(ch, map.getOrDefault(ch, 0) + 1);
+            if (counter < map.get(ch))
+                counter = map.get(ch);
+            // check how many chars to "flip" by looking at the delta between the
+            // length of the string and the highest frequency char. If <= k, no problem. Otherwise, move window
+            while(!(right - left - counter <= k)) { // apply De Morgan and make it right - left - counter > k
+                char tmp = s.charAt(left);
+                map.put(tmp, map.get(tmp) - 1);
+                counter = getMax(map);
+                left++;
+            }
+            res = Math.max(res, right - left);
+        }
+        System.out.println("res: " + res);
+        return res;
+    }
+
+    private int getMax(Map<Character, Integer> map) {
+        int max = 0;
+        for(int freq : map.values()) {
+            max = Math.max(max, freq);
+        }
+        return max;
+    }
+
+
+//    https://leetcode.com/problems/permutation-in-string/description/
+//
+//    class Solution(object):
+//    def checkInclusion(self, s1, s2):
+//            """
+//            :type s1: str
+//        :type s2: str
+//        :rtype: bool
+//        """
+//    start = end = 0
+//    memo = collections.defaultdict(int)
+//            for s in s1:
+//    memo[s] += 1
+//    counter = len(memo)
+//        while end < len(s2):
+//    c = s2[end]
+//            if c in memo:
+//    memo[c] -= 1
+//            if memo[c] == 0:
+//    counter -= 1
+//    end += 1
+//            while counter == 0:
+//    t = s2[start]
+//            if t in memo:
+//    memo[t] += 1
+//            if memo[t] >0 :
+//    counter += 1
+//            if end - start == len(s1):
+//            return True
+//    start += 1
+//            return False
+
+
+}
+package QuickReference;
+
+
+import java.util.*;
+
+/**
+ * ref: https://medium.com/leetcode-patterns/leetcode-pattern-2-sliding-windows-for-strings-e19af105316b
+ * ref: https://leetcode.com/problems/find-all-anagrams-in-a-string/discuss/92007/Sliding-Window-algorithm-template-to-solve-all-the-Leetcode-substring-search-problem.
+ */
+public class SlidingWindow {
+
+    /**
+     Sliding Window Maximum (Maximum of all subarrays of size k)
+     Given an array and an integer K, find the maximum for each and every contiguous subarray of size k.
+     Examples :
+     Input: arr[] = {1, 2, 3, 1, 4, 5, 2, 3, 6}, K = 3
+     Output: 3 3 4 5 5 5 6
+
+     Input: arr[] = {8, 5, 10, 7, 9, 4, 15, 12, 90, 13}, K = 4
+     Output: 10 10 10 15 15 90 90
+     */
+
+    static void slidingWindowMax() {
+        int[] nums = new int[] {1, 2, 3, 1, 4, 5, 2, 3, 6};
+        int k = 3;
+
+        ArrayDeque<Integer> q = new ArrayDeque<>();
+        int[] result = new int[nums.length - k +1]; //8-3+1->6
+
+        for(int i=0; i < nums.length ; i++) {
+
+            //once in k interval -> n/k times
+            if(!q.isEmpty() && q.peekFirst() <= i - k) { // 0 1 2 3 4 ->
+                q.pollFirst();
+            }
+
+            // at the max k elements -> k times
+            while(!q.isEmpty() && nums[q.peekLast()] < nums[i]) {
+                q.pollLast();
+            }
+
+
+            q.addLast(i);
+
+            if(i-k+1 >= 0)
+               result[i-k+1] = nums[q.peekFirst()];
+
+        }
+
+        Arrays.stream(result).forEach(e-> System.out.println(e));
+    }
+
+    /**Max of consecutive elements in an array
+    Given an array of integers of size ‘n’.
+    Our aim is to calculate the maximum sum possible for ‘k’ consecutive elements in the array.
+
+            Input  : arr[] = {100, 200, 300, 400}
+    k = 2
+    Output : 700
+     */
+
+    public static void maxArray() {
+        int[] nums = new int[] {1,2,3,4,5,6,7};
+        int k =3;
+        int[] result = new int[nums.length-k+1];
+        int max = 0;
+        int i = 0;
+        for( ; i<k;i++) {
+            max +=nums[i];
+        }
+        result[i-k] = max;
+
+      for(;i < nums.length; i++ ) {
+          result[i-k+1] = nums[i] + result[i-k] - nums[i-k];
+          max = Math.max(max, result[i-k+1]);
+      }
+
+        System.out.println("max: " + max);
+
+        /**
+//         int max_sum = 0, window_sum = 0;
+//         /* calculate sum of 1st window */
+//        for (int i = 0; i < k; i++)
+//        window_sum += arr[i];
+//        /* slide window from start to end in array. */
+//
+//        for (int i = k; i < n; i++){
+//            window_sum += arr[i] - arr[i-k];    // saving re-computation
+//            max_sum = max(max_sum, window_sum);
+//        }
+//         */
+
+    }
+
+    public static void main(String[] args) {
+//        slidingWindowMax();
+//        maxArray();
+//        minWindow("ABDEACBEECDDFGABBCE", "ABC");
+//        FindAllAnagramsSlidingWindow();
+//        lengthOfLongestSubstring("abcdeadk");
+//        lengthOfLongestSubstringTwoDistinct("aaaabbbbbcde");
+        String s = "barfoothefoobarman";
+        String[] arr = new String[]{"foo","bar" };
+//        findSubstring(s, arr);
+        characterReplacement("AAAABBC", 1);
+    }
+
+    // Ref:- https://medium.com/leetcode-patterns/leetcode-pattern-2-sliding-windows-for-strings-e19af105316b
+
+    public static String minWindow(String s, String t) {
+
+        if (s.length() == 0 || t.length() == 0) {
+            return "";
+        }
+
+        // Dictionary which keeps a count of all the unique characters in t.
+        Map<Character, Integer> dictT = new HashMap<Character, Integer>();
+
+        for (int i = 0; i < t.length(); i++) {
+            int count = dictT.getOrDefault(t.charAt(i), 0);
+            dictT.put(t.charAt(i), count + 1);
+        }
+
+        // Number of unique characters in t, which need to be present in the desired window.
+        int required = dictT.size();
+
+        // Left and Right pointer
+        int l = 0, r = 0;
+
+        // formed is used to keep track of how many unique characters in t
+        // are present in the current window in its desired frequency.
+        // e.g. if t is "AABC" then the window must have two A's, one B and one C.
+        // Thus formed would be = 3 when all these conditions are met.
+        int formed = 0;
+
+        // Dictionary which keeps a count of all the unique characters in the current window.
+        Map<Character, Integer> windowCounts = new HashMap<Character, Integer>();
+
+        // ans list of the form (window length, left, right)
+        int[] ans = {-1, 0, 0};
+
+        while (r < s.length()) {
+            // Add one character from the right to the window
+            char c = s.charAt(r);
+
+            if(dictT.containsKey(c)) {
+                int count = windowCounts.getOrDefault(c, 0);
+                windowCounts.put(c, count + 1);
+
+                // If the frequency of the current character added equals to the
+                // desired count in t then increment the formed count by 1.
+                if (windowCounts.get(c).intValue() == dictT.get(c).intValue()) {
+                    formed++;
+                }
+            }
+
+            // Try and contract the window till the point where it ceases to be 'desirable'.
+            while (l <= r && formed == required) {
+                c = s.charAt(l);
+                // Save the smallest window until now.
+                if (ans[0] == -1 || r - l + 1 < ans[0]) {
+                    ans[0] = r - l + 1;
+                    ans[1] = l;
+                    ans[2] = r;
+                }
+
+                if(windowCounts.containsKey(c)) {
+                    // The character at the position pointed by the
+                    // `Left` pointer is no longer a part of the window.
+                    windowCounts.put(c, windowCounts.get(c) - 1);
+                    if (dictT.containsKey(c) && windowCounts.get(c).intValue() < dictT.get(c).intValue()) {
+                        formed--;
+                    }
+
+                }
+                // Move the left pointer ahead, this would help to look for a new window.
+                l++;
+            }
+
+            // Keep expanding the window once we are done contracting.
+            r++;
+        }
+
+         System.out.println("exits");
+         Arrays.stream(ans).forEach(e-> System.out.println(e));
+        return ans[0] == -1 ? "" : s.substring(ans[1], ans[2] + 1);
+    }
+
+    /** Find All Anagrams in a String
+    https://leetcode.com/problems/find-all-anagrams-in-a-string/description/
+
+     Given a string s and a non-empty string p, find all the start indices of p's anagrams in s.
+
+     Strings consists of lowercase English letters only and the length of both strings s and p will not be larger than 20,100.
+
+     The order of output does not matter.
+
+     Example 1:
+
+     Input:
+     s: "cbaebabacd" p: "abc"
+
+     Output:
+     [0, 6]
+
+     Explanation:
+     The substring with start index = 0 is "cba", which is an anagram of "abc".
+     The substring with start index = 6 is "bac", which is an anagram of "abc".
+
+
+     */
+
+    public static  void FindAllAnagramsSlidingWindow() {
+        String s = "cbaebababacd";
+        String t = "abc";
+
+
+        int left = 0;
+        int right = 0;
+        Map<Character, Integer> tMap = new HashMap<>();
+
+        for(char c:t.toCharArray()) {
+            tMap.put(c, tMap.getOrDefault(c,0)+1);
+        }
+
+        Map<Character, Integer> windowMap = new HashMap<>();
+        int anagramCharCount = 0;
+        int angramStartIndex = 0;
+
+
+        while(right < s.length()) {
+
+            char c = s.charAt(right);
+            if(tMap.containsKey(c)) {
+                windowMap.put(c, windowMap.getOrDefault(c,0)+1);
+
+                if(tMap.get(c).intValue() == windowMap.get(c).intValue()) {
+                    anagramCharCount++;
+                }
+            }
+            while(anagramCharCount == tMap.size()) {
+                if(right-left+1 == t.length() ) {
+                    angramStartIndex = left;
+                    System.out.println("anaGramStartIndex: " + angramStartIndex);
+                }
+
+                char c2 = s.charAt(left);
+                if(tMap.containsKey(c2)) {
+                    windowMap.put(c2, windowMap.get(c2)-1);
+                    if(windowMap.get(c2) < tMap.get(c2))
+                         anagramCharCount--;
+                }
+                left++;
+            }
+            right++;
+        }
+    }
+
+    public static int lengthOfLongestSubstring(String s) {
+        Map<Character, Integer> map = new HashMap<>();
+        int begin = 0, end = 0, counter = 0, d = 0;
+
+        while (end < s.length()) {
+            // > 0 means repeating character
+            //if(map[s.charAt(end++)]-- > 0) counter++;
+            char c = s.charAt(end);
+            map.put(c, map.getOrDefault(c, 0) + 1);
+            if(map.get(c) > 1) counter++;
+            end++;
+
+            while (counter > 0) {
+                //if (map[s.charAt(begin++)]-- > 1) counter--;
+                char charTemp = s.charAt(begin);
+                if (map.get(charTemp) > 1) counter--;
+                map.put(charTemp, map.get(charTemp)-1);
+                begin++;
+            }
+            d = Math.max(d, end - begin);
+        }
+        return d;
+    }
+
+
+   static public int lengthOfLongestSubstringTwoDistinct(String s) {
+        Map<Character,Integer> map = new HashMap<>();
+        int start = 0, end = 0, counter = 0, len = 0;
+        while(end < s.length()){
+            char c = s.charAt(end);
+            map.put(c, map.getOrDefault(c, 0) + 1);
+            if(map.get(c) == 1)
+                counter++;//new char
+            end++;
+            while(counter > 2){
+                char cTemp = s.charAt(start);
+                map.put(cTemp, map.get(cTemp) - 1);
+                if(map.get(cTemp) == 0){
+                    counter--;
+                    System.out.println("start at: "+ start);
+                }
+                start++;
+
+            }
+            len = Math.max(len, end-start);
+            System.out.println("lenth:" + len +", start:" + start + ", end;" + end);
+        }
+
+        return len;
+    }
+
+    /**
+     Substring with Concatenation of All Words
+
+     Share
+     You are given a string, s, and a list of words, words, that are all of the same length. Find all starting indices of substring(s) in s that is a concatenation of each word in words exactly once and without any intervening characters.
+
+
+
+     Example 1:
+
+     Input:
+     s = "barfoothefoobarman",
+     words = ["foo","bar"]
+     Output: [0,9]
+     Explanation: Substrings starting at index 0 and 9 are "barfoo" and "foobar" respectively.
+     The output order does not matter, returning [9,0] is fine too.
+     Example 2:
+
+     Input:
+     s = "wordgoodgoodgoodbestword",
+     words = ["word","good","best","word"]
+     Output: []
+     */
+//    public List<Integer> findSubstring(String s, String[] words) {
+//        if (s == null || words == null || s.length() == 0 || words.length == 0) {
+//            return new ArrayList<>();
+//        }
+//        Map<String, Integer> counts = new HashMap<>();
+//        for (String word : words) {
+//            counts.put(word, counts.getOrDefault(word, 0) + 1);
+//        }
+//
+//        List<Integer> r = new ArrayList<>();
+//        int sLen = s.length();
+//        int num = words.length;
+//        int wordLen = words[0].length();
+//
+//        for (int i = 0; i < sLen - num * wordLen + 1; i++) {
+//            String sub = s.substring(i, i + num * wordLen);
+//            if (isConcat(sub, counts, wordLen)) {
+//                r.add(i);
+//            }
+//        }
+//        return r;
+//    }
+
+    /**
+     * */
+    static private boolean  isConcat(String sub, Map<String, Integer> counts, int wordLen) {
+        Map<String, Integer> seen = new HashMap<>();
+        for (int i = 0; i < sub.length(); i += wordLen) {
+            String sWord = sub.substring(i, i + wordLen);
+            seen.put(sWord, seen.getOrDefault(sWord, 0) + 1);
+        }
+        return seen.equals(counts);
+    }
+
+
+    public static List<Integer> findSubstring(String s, String[] words) {
+        if (s == null || words == null || s.length() == 0 || words.length == 0) {
+            return new ArrayList<>();
+        }
+        Map<String, Integer> counts = new HashMap<>();
+        for (String word : words) {
+            counts.put(word, counts.getOrDefault(word, 0) + 1);
+        }
+
+        List<Integer> r = new ArrayList<>();
+        int sLen = s.length();
+        int num = words.length;
+        int wordLen = words[0].length();
+
+        for (int i = 0; i < sLen - num * wordLen + 1; i++) {
+            String sub = s.substring(i, i + num * wordLen);
+            if (isConcat(sub, counts, wordLen)) {
+                r.add(i);
+            }
+        }
+        System.out.println("r: " + r);
+        return r;
+    }
+
+
+    public boolean checkInclusion(String s1, String s2) {
+        Map<Character,Integer> map = new HashMap<>();
+        for(Character ch : s1.toCharArray())
+            map.put(ch,map.getOrDefault(ch,0)+1);
+
+        int left = 0;
+        int count = 0;
+
+        for(int i=0;i<s2.length();i++){
+            char ch = s2.charAt(i);
+            map.put(ch, map.getOrDefault(ch,0)-1);
+            if(map.get(ch)>=0)
+                count++;
+
+            while(count==s1.length()&& left<=i){
+                if(i-left==s1.length()-1)
+                    return true;
+                char leftChar = s2.charAt(left);
+                map.put(leftChar, map.getOrDefault(leftChar,0)+1);
+                if(map.get(leftChar)>0) {
+                    count--;
+                }
+                left++;
+            }
+        }
+        return false;
+    }
+
+
+
+//    Longest Repeating Character Replacement
+//    https://leetcode.com/problems/longest-repeating-character-replacement
+   static public int characterReplacement(String s, int k)
+    {
+        int[] count = new int[26];
+        int maxCount=0;
+        int start=0;
+        int maxLen = 0;
+        for(int end=0; end<s.length(); end++)
+        {
+            count[s.charAt(end)-'A']++;
+
+            maxCount = Math.max(maxCount, count[s.charAt(end)-'A']);
+
+            if(end-start -maxCount +1 > k) {
+                start++;
+                count[s.charAt(start) - 'A']--;
+            }
+            maxLen = Math.max(maxLen, end-start+1);
+        }
+        System.out.println("result:" + (maxLen));
+        return maxLen;
+    }
+
+    public int characterReplacement1(String s, int k) {
+        if (s == null || s.isEmpty()) return 0;
+        int left = 0, right = 0, counter = 0, res = 0;
+        Map<Character, Integer> map = new HashMap<>();
+        while(right < s.length()) {
+            char ch = s.charAt(right++);
+            map.put(ch, map.getOrDefault(ch, 0) + 1);
+            if (counter < map.get(ch))
+                counter = map.get(ch);
+            // check how many chars to "flip" by looking at the delta between the
+            // length of the string and the highest frequency char. If <= k, no problem. Otherwise, move window
+            while(!(right - left - counter <= k)) { // apply De Morgan and make it right - left - counter > k
+                char tmp = s.charAt(left);
+                map.put(tmp, map.get(tmp) - 1);
+                counter = getMax(map);
+                left++;
+            }
+            res = Math.max(res, right - left);
+        }
+        System.out.println("res: " + res);
+        return res;
+    }
+
+    private int getMax(Map<Character, Integer> map) {
+        int max = 0;
+        for(int freq : map.values()) {
+            max = Math.max(max, freq);
+        }
+        return max;
+    }
+
+
+//    https://leetcode.com/problems/permutation-in-string/description/
+//
+//    class Solution(object):
+//    def checkInclusion(self, s1, s2):
+//            """
+//            :type s1: str
+//        :type s2: str
+//        :rtype: bool
+//        """
+//    start = end = 0
+//    memo = collections.defaultdict(int)
+//            for s in s1:
+//    memo[s] += 1
+//    counter = len(memo)
+//        while end < len(s2):
+//    c = s2[end]
+//            if c in memo:
+//    memo[c] -= 1
+//            if memo[c] == 0:
+//    counter -= 1
+//    end += 1
+//            while counter == 0:
+//    t = s2[start]
+//            if t in memo:
+//    memo[t] += 1
+//            if memo[t] >0 :
+//    counter += 1
+//            if end - start == len(s1):
+//            return True
+//    start += 1
+//            return False
+
+
+}
